@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataBlock Labs build log: October to November 2026</title>
+<meta name="description" content="What DataBlock Labs built from 2026-10-30 to 2026-11-02: the Leptos rebuild of datablock.pro, a Web3 data engineering guide, slotguard Phase 0 and a measured performance loop.">
+<link rel="canonical" href="https://datablock-labs.github.io/build-log/">
+<style>
+:root{--bg:#0a0a0a;--bg2:#1a1a1a;--fg:#e0e0e0;--dim:#a0a0a0;--rule:#333;--act:#00ff88;--warn:#ffcc00;--bolt:#01d3fb;
+--mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 var(--mono)}
+main{max-width:960px;margin:0 auto;padding:40px 20px 64px}
+a{color:var(--act)}
+h1{font-size:1.6rem;margin:0 0 8px}
+h2{font-size:1.15rem;margin:48px 0 12px;padding-top:16px;border-top:1px solid var(--rule)}
+h2 span{color:var(--bolt)}
+h3{font-size:1rem;margin:24px 0 8px}
+p,li{color:var(--fg)}
+.dim{color:var(--dim)}
+.tag{display:inline-block;border:1px solid var(--rule);padding:0 6px;margin-right:6px;font-size:.8rem;color:var(--dim)}
+.tag.ok{color:var(--act);border-color:var(--act)}
+.tag.open{color:var(--warn);border-color:var(--warn)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.card{background:var(--bg2);border:1px solid var(--rule);padding:12px}
+.card b{display:block;font-size:1.3rem;color:var(--act)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.9rem}
+th,td{text-align:left;border-bottom:1px solid var(--rule);padding:6px 8px;vertical-align:top}
+th{color:var(--dim);font-weight:normal}
+.wrap{overflow-x:auto}
+pre{background:var(--bg2);border:1px solid var(--rule);padding:12px;overflow-x:auto;font-size:.85rem}
+img{max-width:100%;border:1px solid var(--rule)}
+footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--rule);color:var(--dim);font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+<p class="dim">DataBlock Labs / build log</p>
+<h1>What we built: 2026-10-30 to 2026-11-02</h1>
+<p>Four days of work across three sites and one new open-source tool. Every number on this page
+comes from a measurement or a test run. Nothing here has users or customers yet, and this page
+does not say otherwise.</p>
+
+<div class="grid">
+  <div class="card"><b>0.78 → 0.96</b>datablock.pro mobile Lighthouse score</div>
+  <div class="card"><b>79 → 44</b>requests on the databolt.dev home page</div>
+  <div class="card"><b>4 repos</b>slotguard Phase 0, core is open source</div>
+  <div class="card"><b>10 notes</b>Web3 data engineering field guide</div>
+</div>
+
+<h2><span>01</span> datablock.pro rebuilt in Rust</h2>
+<p>We rebuilt <a href="https://datablock.pro">datablock.pro</a> as a static
+<a href="https://leptos.dev">Leptos 0.8</a> site on the DataBolt design system.</p>
+<ul>
+  <li>Every route is pre-rendered: home, services, products, use cases, work, notes, about, contact, book, 404, sitemap and robots.</li>
+  <li>WebAssembly loads only for islands: the contact and newsletter forms, the chat panel, the X feed (on click) and the mobile menu.</li>
+  <li>The build reads project status at build time, in Rust, with tests. It fails soft when a token is not set.</li>
+  <li>301 redirects keep the old Next.js URLs alive.</li>
+  <li>SEO: a canonical URL and a 1200×630 share image on every page, and JSON-LD on the home page. One broken link (a 404) is fixed.</li>
+</ul>
+<p class="dim">Checks: <code>cargo test</code> (15 pass), clippy clean, a crawl of 40 pages with 0 broken internal links, no sideways scroll at 375 px or 1440 px.</p>
+
+<h2><span>02</span> Web3 data engineering field guide</h2>
+<p>A series hub at <a href="https://datablock.pro/notes/web3">datablock.pro/notes/web3</a> with ten sourced notes in two tracks:</p>
+<ul>
+  <li><b>Business:</b> the 2026 market, needs by company type, GENIUS, MiCA and DAC8 data work, build or buy, AI agents and chain data.</li>
+  <li><b>Engineering:</b> the decentralized stack, reorgs and finality, contract decoding, an analytics lakehouse and a real-time trading architecture.</li>
+</ul>
+<p>From the next site release, the <a href="https://datablock.pro/work">/work</a> page lists three open-source tools in progress:
+slotguard, canonlake (reorg-safe EVM chain data in Delta Lake) and stabletrail (open evidence tables for stablecoin supply).
+canonlake and stabletrail are designs only.</p>
+
+<h2><span>03</span> slotguard: Phase 0</h2>
+<p>slotguard audits a Solana transaction pipeline. It reads the rows your pipeline wrote, compares
+them slot by slot with finalized blocks from Solana RPC, and reports each problem with its evidence:
+missing slots and transactions, duplicates, rows in dead slots, wrong blockhashes and rows marked final too early.
+It is read-only: it reads Postgres inside a <code>READ ONLY</code> transaction and never writes.</p>
+
+<div class="wrap"><table>
+<tr><th>Repo</th><th>Job</th><th>Stack</th><th>Visibility</th></tr>
+<tr><td><a href="https://github.com/DataBlock-Labs/slotguard-core">slotguard-core</a></td><td>Audit engine and CLI: slot classifier, findings, RPC reference, Postgres and Parquet sinks, JSON/CSV/Markdown reports</td><td>Rust 2024</td><td><span class="tag ok">public</span></td></tr>
+<tr><td>slotguard-api</td><td>HTTP API and job runner: validation, limits, DSN host allowlist, log redaction, report store</td><td>Rust, axum, tokio</td><td><span class="tag">private</span></td></tr>
+<tr><td>slotguard-web</td><td>Start an audit, watch progress, read and download the report</td><td>Next.js, TypeScript, Tailwind</td><td><span class="tag">private</span></td></tr>
+<tr><td>slotguard-docs</td><td>Architecture, roadmap, ADRs and specs</td><td>Markdown</td><td><span class="tag">private</span></td></tr>
+</table></div>
+
+<pre>browser ──► slotguard-web ──► slotguard-api ──► slotguard-core ──► Solana RPC (getBlock, finalized)
+                                    │                 │
+                                    │                 └─► your sink: Postgres table or Parquet files
+                                    └─► report: JSON · CSV · Markdown</pre>
+
+<p>On 2026-11-01 a 3-slot mainnet audit ran end to end on localhost: web UI, API, engine, public RPC,
+report in the browser. The Parquet test file had one transaction removed, and slotguard found it:</p>
+<p><img src="assets/slotguard-audit.png" alt="slotguard web report: status done, 3 of 3 slots, one missing_transaction finding at slot 464214913" width="1280" height="973" loading="lazy"></p>
+<p class="dim">Status: alpha. Not on crates.io. Nothing is hosted. Phase 1 (hosted) and Phase 2 (inside a
+customer's data platform) are designs only. The public endpoint served about 0.5 getBlock calls per
+second without HTTP 429, so 1,000 slots take about 33 minutes; long ranges need a paid RPC endpoint.</p>
+
+<h2><span>04</span> A measured performance loop</h2>
+<p>We added a website track to our <code>self-improve</code> agent skill. The loop is:
+measure → find the cause → make <b>one</b> change → gate it → keep or revert → log it.
+The gate is a small Python script around Lighthouse 12 (mobile preset, median of 3 runs).
+It gives KEEP only when the target metric gets better by more than 5% on every page and no other metric gets worse.</p>
+
+<h3>Results</h3>
+<div class="wrap"><table>
+<tr><th>Site</th><th>Cause</th><th>Fix</th><th>Result</th><th>State</th></tr>
+<tr><td>datablock.pro</td><td>The mobile menu collapsed only after hydration, so the page jumped (CLS 0.37)</td><td>A CSS <code>@media (scripting: enabled)</code> rule shows the collapsed menu from the first paint</td><td>CLS 0.37 → 0; score 0.78 → 0.96 on /, /services and /work</td><td><span class="tag open">PR open</span></td></tr>
+<tr><td>databolt.dev</td><td>The closed sidebar kept its links in the DOM, so Next.js prefetched every route on each load</td><td>Prefetch drawer links only while the drawer is open</td><td>Requests 79 → 44 (/), 67 → 32 (/challenges), 79 → 43 (/learn); about 70 KB less per page; TBT on / 413 → 295 ms</td><td><span class="tag open">PR open</span></td></tr>
+</table></div>
+<p class="dim">Both results come from local production builds, not from field data.</p>
+
+<h3>One skill, four agent harnesses</h3>
+<p>The same skill runs in every agent harness we use. Each harness gets the model that fits the job:</p>
+<div class="wrap"><table>
+<tr><th>Harness</th><th>Model</th><th>Scope</th></tr>
+<tr><td>Claude Code</td><td>Sonnet for attempts, Opus for the monthly review of the loop</td><td>Full loop</td></tr>
+<tr><td>Orca</td><td>Sonnet (launched with <code>--model</code>)</td><td>Full loop</td></tr>
+<tr><td>Hermes</td><td>Sonnet</td><td>Full loop</td></tr>
+<tr><td>pi</td><td>Haiku 4.5 (short copy of the skill, about 200 words)</td><td>Measure and gate only, to keep token cost low</td></tr>
+</table></div>
+
+<h2><span>05</span> Rules we kept</h2>
+<ul>
+  <li>No invented numbers, users or clients.</li>
+  <li>Secrets live only in environment variables. Automated tests never call mainnet.</li>
+  <li>One change per attempt, on a branch, behind a review.</li>
+  <li>Docs are written in ASD-STE100 Simplified Technical English.</li>
+</ul>
+
+<footer>
+DataBlock Labs · <a href="https://datablock.pro">datablock.pro</a> · <a href="https://www.databolt.dev">databolt.dev</a> ·
+<a href="https://github.com/DataBlock-Labs">github.com/DataBlock-Labs</a> · Pricing: <a href="https://datablock.pro/contact">contact us</a>.
+</footer>
+</main>
+</body>
+</html>

@@ -93,7 +93,8 @@ It is read-only: it reads Postgres inside a <code>READ ONLY</code> transaction a
 <p>On 2026-11-01 a 3-slot mainnet audit ran end to end on localhost: web UI, API, engine, public RPC,
 report in the browser. The Parquet test file had one transaction removed, and slotguard found it:</p>
 <p><img src="assets/slotguard-audit.png" alt="slotguard web report: status done, 3 of 3 slots, one missing_transaction finding at slot 464214913" width="1280" height="973" loading="lazy"></p>
-<p class="dim">Status: alpha. Not on crates.io. Nothing is hosted. Phase 1 (hosted) and Phase 2 (inside a
+<p><b>Try it:</b> a public demo runs at <a href="https://slotguard-web.vercel.app">slotguard-web.vercel.app</a> (since 2026-11-03). Click <b>Load the sample</b>, then <b>Run audit</b>. The demo takes Parquet uploads only, up to 20 slots and 10 MB.</p>
+<p class="dim">Status: alpha. Not on crates.io. The demo has no accounts and keeps reports for at most an hour. Phase 1 (accounts, saved audits) and Phase 2 (inside a
 customer's data platform) are designs only. The public endpoint served about 0.5 getBlock calls per
 second without HTTP 429, so 1,000 slots take about 33 minutes; long ranges need a paid RPC endpoint.</p>
 

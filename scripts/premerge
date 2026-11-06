@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Pre-merge gate: run the checks before a push or merge. See the premerge-gate skill.
+# One command per line: set -e does not stop on the left side of `&&`.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+# Static GitHub Pages site: no build.
+tier_fast() {
+	gitleaks detect --source . --no-git --no-banner --log-level warn
+	test -s index.html
+}
+
+tier_full() {
+	tier_fast
+}
+
+tier_uat() {
+	: # Pages serves the files as committed; nothing to start.
+}
+
+lib=${PREMERGE_LIB:-$HOME/projects/hermes-ops/bin/premerge-lib.sh}
+if [ -f "$lib" ]; then
+	# shellcheck source=/dev/null
+	. "$lib"
+	premerge_main "$@"
+else
+	echo "premerge: $lib missing; running tier without stamp" >&2
+	"tier_${1:-fast}"
+fi
